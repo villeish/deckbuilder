@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Deckbuilder</title>
+</head>
+
+<body>
+  <h1>Deckbuilder</h1>
+  {% if session.username %}
+  <p>
+    Youre logged in as {{ session.username }}
+  </p>
+  {% endif %}
+
+  <p>
+    <a href="/login">Log in</a>
+    <a href="/register">Register</a>
+    <a href="/logout">Log out</a>      
+  </p>
+</body>
+
+</html>

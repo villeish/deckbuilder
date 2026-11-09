@@ -7,4 +7,4 @@
 - käyttäjäsivu näyttää käyttäjän lisäämät pakat
 - käyttäjä pystyy etsimään pakkoja yksittäisten korttien tai luokittelun perusteella
 - käyttäjä pystyy valitsemaan esimerkiksi seuraavia luokitteluja: aggro, control, tribal
-- Pääasiallinen tietokohde on pakka ja toissijainen tietokohde on kortit. 
+- Pääasiallinen tietokohde on pakka ja toissijainen tietokohde on kommentit. 
