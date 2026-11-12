@@ -8,7 +8,11 @@
 {% if session.user_id == deck.user_id %}
 <p>
   <a href="/edit_deck/{{ deck.id }}">Edit deck</a>
-  <a href="/remove_deck/{{ deck.id }}">Delete deck</a>
+  <form action="/remove_deck" method="post">
+  <input type="hidden" name="deck_id" value="{{ deck.id }}" />
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+  <input type="submit" value="Delete deck" />
+</form>
 </p>
 {% endif %}
 
@@ -21,8 +25,52 @@
 <h3>Cards</h3>
 <ul>
   {% for card in cards %}
-  <li>{{ card.quantity }} × {{ card.card_name }}</li>
+  <li>
+    {{ card.card_name }}
+
+    {% if session.user_id == deck.user_id %}
+    <form action="/update_card" method="post">
+      <input type="number" name="quantity"
+             value="{{ card.quantity }}" min="1" required />
+
+      <input type="hidden" name="card_id" value="{{ card.id }}" />
+      <input type="hidden" name="deck_id" value="{{ deck.id }}" />
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+
+      <input type="submit" value="Update quantity" />
+    </form>
+    <form action="/remove_card" method="post">
+      <input type="hidden" name="card_id" value="{{ card.id }}" />
+      <input type="hidden" name="deck_id" value="{{ deck.id }}" />
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+      <input type="submit" value="Remove card" />
+      </form>
+    {% else %}
+      ({{ card.quantity }} copies)
+    {% endif %}
+  </li>
   {% endfor %}
 </ul>
+
+{% if session.user_id == deck.user_id %}
+<h3>Add a card</h3>
+
+<form action="/add_card" method="post">
+  <p>
+    <label for="card_name">Card name:</label> <br />
+    <input type="text" name="card_name" id="card_name" maxlength="100" required />
+  </p>
+
+  <p>
+    <label for="quantity">Quantity:</label> <br />
+    <input type="number" name="quantity" id="quantity" min="1" required />
+  </p>
+
+  <input type="hidden" name="deck_id" value="{{ deck.id }}" />
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+
+  <input type="submit" value="Add card" />
+</form>
+{% endif %}
 
 {% endblock %}

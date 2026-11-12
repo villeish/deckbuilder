@@ -57,6 +57,158 @@ def show_deck(deck_id):
 
     return render_template("show_deck.html", deck=deck, cards=cards)
 
+@app.route("/edit_deck/<int:deck_id>", methods=["GET", "POST"])
+def edit_deck(deck_id):
+    require_login()
+
+    deck = decks.get_deck(deck_id)
+
+    if not deck:
+        abort(404)
+
+    if deck["user_id"] != session["user_id"]:
+        abort(403)
+
+    if request.method == "GET":
+        return render_template("edit_deck.html", deck=deck)
+
+    check_csrf()
+
+    name = request.form["name"]
+    description = request.form["description"]
+
+    if name == "":
+        flash("You must give the deck a name.")
+        return redirect("/edit_deck/" + str(deck_id))
+
+    if len(name) > 50 or len(description) > 1000:
+        abort(403)
+
+    decks.update_deck(deck_id, name, description)
+
+    flash("Deck details updated.")
+    return redirect("/deck/" + str(deck_id))
+
+@app.route("/remove_deck", methods=["POST"])
+def remove_deck():
+    require_login()
+    check_csrf()
+
+    deck_id = request.form["deck_id"]
+
+    if not deck_id.isdigit():
+        abort(403)
+
+    deck_id = int(deck_id)
+    deck = decks.get_deck(deck_id)
+
+    if not deck:
+        abort(404)
+
+    if deck["user_id"] != session["user_id"]:
+        abort(403)
+
+    decks.remove_deck(deck_id)
+
+    return redirect("/")
+
+@app.route("/add_card", methods=["POST"])
+def add_card():
+    require_login()
+    check_csrf()
+
+    deck_id = request.form["deck_id"]
+    card_name = request.form["card_name"].strip()
+    quantity = request.form["quantity"]
+
+    if not deck_id.isdigit():
+        abort(403)
+
+    if not card_name or len(card_name) > 100:
+        abort(403)
+
+    if not quantity.isdigit() or int(quantity) < 1:
+        abort(403)
+
+    deck_id = int(deck_id)
+    deck = decks.get_deck(deck_id)
+
+    if not deck:
+        abort(404)
+
+    if deck["user_id"] != session["user_id"]:
+        abort(403)
+
+    decks.add_card(deck_id, card_name, int(quantity))
+
+    return redirect("/deck/" + str(deck_id))
+
+@app.route("/update_card", methods=["POST"])
+def update_card():
+    require_login()
+    check_csrf()
+
+    deck_id = request.form["deck_id"]
+    card_id = request.form["card_id"]
+    quantity = request.form["quantity"]
+
+    if not deck_id.isdigit() or not card_id.isdigit():
+        abort(403)
+
+    if not quantity.isdigit() or int(quantity) < 1:
+        abort(403)
+
+    deck_id = int(deck_id)
+    card_id = int(card_id)
+
+    deck = decks.get_deck(deck_id)
+
+    if not deck:
+        abort(404)
+
+    if deck["user_id"] != session["user_id"]:
+        abort(403)
+
+    cards = decks.get_cards(deck_id)
+
+    if not any(card["id"] == card_id for card in cards):
+        abort(404)
+
+    decks.update_card_quantity(card_id, int(quantity))
+
+    return redirect("/deck/" + str(deck_id))
+
+@app.route("/remove_card", methods=["POST"])
+def remove_card():
+    require_login()
+    check_csrf()
+
+    deck_id = request.form["deck_id"]
+    card_id = request.form["card_id"]
+
+    if not deck_id.isdigit() or not card_id.isdigit():
+        abort(403)
+
+    deck_id = int(deck_id)
+    card_id = int(card_id)
+
+    deck = decks.get_deck(deck_id)
+
+    if not deck:
+        abort(404)
+
+    if deck["user_id"] != session["user_id"]:
+        abort(403)
+
+    cards = decks.get_cards(deck_id)
+
+    if not any(card["id"] == card_id for card in cards):
+        abort(404)
+
+    decks.remove_card(card_id)
+
+    return redirect("/deck/" + str(deck_id))
+
 @app.route("/register")
 def register():
     return render_template("register.html")

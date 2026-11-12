@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit deck{% endblock %}
+
+{% block content %}
+<h2>Edit deck details</h2>
+
+<form action="/edit_deck/{{ deck.id }}" method="post">
+  <p>
+    <label for="name">Deck name:</label> <br />
+    <input type="text" name="name" id="name"
+           value="{{ deck.name }}" maxlength="50" required />
+  </p>
+
+  <p>
+    <label for="description">Description:</label> <br />
+    <textarea name="description" id="description"
+              rows="8" cols="60" maxlength="1000">{{ deck.description }}</textarea>
+  </p>
+
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+  <input type="submit" value="Save changes" />
+</form>
+
+<p><a href="/deck/{{ deck.id }}">Cancel</a></p>
+
+{% endblock %}
