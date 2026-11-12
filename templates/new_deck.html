@@ -1,0 +1,24 @@
+
+{% extends "layout.html" %}
+
+{% block title %}New Deck{% endblock %}
+
+{% block content %}
+<h2>Create a new deck</h2>
+
+<form action="/create_deck" method="post">
+  <p>
+    <label for="name">Deck name:</label> <br />
+    <input type="text" name="name" id="name" maxlength="50" required />
+  </p>
+
+  <p>
+    <label for="description">Description:</label> <br />
+    <textarea name="description" id="description"
+              rows="8" cols="60" maxlength="1000"></textarea>
+  </p>
+
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+  <input type="submit" value="Create deck" />
+</form>
+{% endblock %}

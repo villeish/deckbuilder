@@ -1,23 +1,22 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
 
-<head>
-  <title>Deckbuilder</title>
-</head>
+{% block title %}Home{% endblock %}
 
-<body>
-  <h1>Deckbuilder</h1>
-  {% if session.username %}
-  <p>
-    Youre logged in as {{ session.username }}
-  </p>
-  {% endif %}
+{% block content %}
+<h2>Welcome to Deckbuilder!</h2>
 
-  <p>
-    <a href="/login">Log in</a>
-    <a href="/register">Register</a>
-    <a href="/logout">Log out</a>      
-  </p>
-</body>
+{% if session.user_id %}
+  <p>Welcome back, {{ session.username }}!</p>
+{% else %}
+  <p>Log in or register to create your own decks.</p>
+{% endif %}
 
-</html>
+{% for deck in decks %}
+<div class="deck">
+  <a href="/deck/{{ deck.id }}">{{ deck.name }}</a> <br />
+  Created by: {{ deck.username }} <br />
+  {{ deck.description }}
+</div>
+{% endfor %}
+
+{% endblock %}

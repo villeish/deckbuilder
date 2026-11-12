@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ deck.name }}{% endblock %}
+
+{% block content %}
+<h2>{{ deck.name }}</h2>
+
+{% if session.user_id == deck.user_id %}
+<p>
+  <a href="/edit_deck/{{ deck.id }}">Edit deck</a>
+  <a href="/remove_deck/{{ deck.id }}">Delete deck</a>
+</p>
+{% endif %}
+
+<p>{{ deck.description }}</p>
+
+<ul>
+  <li>Created by: <a href="/user/{{ deck.user_id }}">{{ deck.username }}</a></li>
+</ul>
+
+<h3>Cards</h3>
+<ul>
+  {% for card in cards %}
+  <li>{{ card.quantity }} × {{ card.card_name }}</li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

@@ -1,21 +1,16 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
 
-<head>
-  <title>Log in</title>
-</head>
-{% for message in get_flashed_messages() %}
-    <p>{{ message }}</p>
-{% endfor %}
-<body>
-  {% if session.username %}
+{% block title %}Log in{% endblock %}
+
+{% block content %}
+{% if session.username %}
   <p>
     You're logged in as {{ session.username }}
   </p>
   <p>
     <a href="/logout">Log out</a>
   </p>
-  {% else %}
+{% else %}
   <form action="/login" method="post">
     <p>
       Username: <br />
@@ -25,9 +20,7 @@
       Password: <br />
       <input type="password" name="password" />
     </p>
-    <input type="submit" value="Kirjaudu" />
+    <input type="submit" value="Log in" />
   </form>
-  {% endif %}
-</body>
-
-</html>
+{% endif %}
+{% endblock %}

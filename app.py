@@ -4,9 +4,14 @@ import secrets
 import config
 import sqlite3
 import users
+import decks
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
+
+def require_login():
+    if "user_id" not in session:
+        abort(403)
 
 def check_csrf():
     if "csrf_token" not in request.form:
@@ -16,7 +21,41 @@ def check_csrf():
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    all_decks = decks.get_decks()
+    return render_template("index.html", decks=all_decks)
+
+@app.route("/new_deck")
+def new_deck():
+    require_login()
+    return render_template("new_deck.html")
+
+@app.route("/create_deck", methods=["POST"])
+def create_deck():
+    require_login()
+    check_csrf()
+
+    name = request.form["name"]
+    if not name or len(name) > 50:
+        abort(403)
+
+    description = request.form["description"]
+    if len(description) > 1000:
+        abort(403)
+
+    user_id = session["user_id"]
+
+    deck_id = decks.add_deck(name, description, user_id)
+    return redirect("/deck/" + str(deck_id))
+
+@app.route("/deck/<int:deck_id>")
+def show_deck(deck_id):
+    deck = decks.get_deck(deck_id)
+    if not deck:
+        abort(404)
+
+    cards = decks.get_cards(deck_id)
+
+    return render_template("show_deck.html", deck=deck, cards=cards)
 
 @app.route("/register")
 def register():
