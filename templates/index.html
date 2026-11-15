@@ -11,6 +11,26 @@
   <p>Log in or register to create your own decks.</p>
 {% endif %}
 
+<form action="/search" method="get">
+  <p>
+    <label for="query">Search decks:</label> <br />
+    <input type="text" name="query" id="query"
+       value="{{ request.args.get('query', '') }}" />
+    <input type="submit" value="Search" />
+  </p>
+  <p>
+    <strong>Filter by tags:</strong><br />
+    {% for tag in all_tags %}
+      <input type="checkbox" name="tags"
+            value="{{ tag.id }}" id="tag{{ tag.id }}"
+            {% if tag.id|string in request.args.getlist('tags') %}
+              checked
+            {% endif %} />
+      <label for="tag{{ tag.id }}">{{ tag.name }}</label><br />
+    {% endfor %}
+  </p>
+</form>
+
 {% for deck in decks %}
 <div class="deck">
   <a href="/deck/{{ deck.id }}">{{ deck.name }}</a> <br />

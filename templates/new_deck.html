@@ -18,6 +18,15 @@
               rows="8" cols="60" maxlength="1000"></textarea>
   </p>
 
+  <p>
+    <strong>Tags:</strong><br />
+    {% for tag in all_tags %}
+      <input type="checkbox" name="tags" value="{{ tag.id }}"
+            id="tag{{ tag.id }}" />
+      <label for="tag{{ tag.id }}">{{ tag.name }}</label><br />
+    {% endfor %}
+  </p>
+
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
   <input type="submit" value="Create deck" />
 </form>

@@ -1,0 +1,19 @@
+
+{% extends "layout.html" %}
+
+{% block title %}Delete deck{% endblock %}
+
+{% block content %}
+<h2>{{ deck.name }}</h2>
+<h3>Delete deck</h3>
+
+<p>Are you sure you want to delete this deck?</p>
+
+<form action="/remove_deck/{{ deck.id }}" method="post">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+  <input type="submit" name="remove" value="Delete deck">
+  <input type="submit" name="back" value="Go back">
+</form>
+
+<p><a href="/deck/{{ deck.id }}">Back to deck</a></p>
+{% endblock %}

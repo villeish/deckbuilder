@@ -8,11 +8,7 @@
 {% if session.user_id == deck.user_id %}
 <p>
   <a href="/edit_deck/{{ deck.id }}">Edit deck</a>
-  <form action="/remove_deck" method="post">
-  <input type="hidden" name="deck_id" value="{{ deck.id }}" />
-  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
-  <input type="submit" value="Delete deck" />
-</form>
+  <a href="/remove_deck/{{ deck.id }}">Delete deck</a>
 </p>
 {% endif %}
 
@@ -21,6 +17,13 @@
 <ul>
   <li>Created by: <a href="/user/{{ deck.user_id }}">{{ deck.username }}</a></li>
 </ul>
+
+<p>
+  <strong>Tags:</strong>
+  {% for tag in tags %}
+    {{ tag.name }}{% if not loop.last %}, {% endif %}
+  {% endfor %}
+</p>
 
 <h3>Cards</h3>
 <ul>
