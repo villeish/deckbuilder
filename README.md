@@ -11,13 +11,19 @@
 
 # Asennus
 Asenna flask-kirjasto:
+
 $ pip install flask
 
 Luo ja alusta tietokanta:
+
 $ sqlite3 database.db < schema.sql
+
 $ sqlite3 database.db < init.sql
+
 tai
+
 $ python3 init_db.py
 
-Testaus
+# Testaus
+
 Rekisteröi käyttäjä ja kirjaudu sisään. Kokeile luoda pakka, lisätä kortteja ja muokata niiden määrää tai etsiä ja poistaa pakkoja. Kokeile myös tehdä toinen käyttäjä ja katsoa toisen käyttäjän pakkoja.
