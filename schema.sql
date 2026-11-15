@@ -29,12 +29,12 @@ CREATE TABLE deck_tags (
     PRIMARY KEY (deck_id, tag_id)
 );
 
-INSERT INTO tags (name) VALUES
-    ('Tribal'),
-    ('Combo'),
-    ('Aggro'),
-    ('Control'),
-    ('Midrange'),
-    ('Voltron'),
-    ('Reanimator'),
-    ('Stax');
+CREATE TABLE comments (
+    id INTEGER PRIMARY KEY,
+    content TEXT,
+    sent_at TEXT,
+    user_id INTEGER REFERENCES users,
+    deck_id INTEGER REFERENCES decks
+);
+
+CREATE INDEX idx_deck_comments ON comments (deck_id);

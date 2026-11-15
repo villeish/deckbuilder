@@ -23,7 +23,18 @@ def check_csrf():
 def index():
     all_decks = decks.get_decks()
     all_tags = decks.get_tags()
-    return render_template("index.html", decks = all_decks, all_tags = all_tags)
+    return render_template("index.html", decks=all_decks, all_tags=all_tags)
+
+@app.route("/user/<int:user_id>")
+def show_user(user_id):
+    user = users.get_user(user_id)
+
+    if not user:
+        abort(404)
+
+    all_decks = users.get_decks(user_id)
+
+    return render_template("show_user.html", user=user, decks=all_decks)
 
 @app.route("/search")
 def search():
@@ -32,13 +43,13 @@ def search():
     tag_ids = request.args.getlist("tags")
     results = decks.find_decks(query, tag_ids)
     all_tags = decks.get_tags()
-    return render_template("index.html", decks = results, all_tags = all_tags)
+    return render_template("index.html", decks=results, all_tags=all_tags)
 
 @app.route("/new_deck")
 def new_deck():
     require_login()
     all_tags = decks.get_tags()
-    return render_template("new_deck.html", all_tags = all_tags)
+    return render_template("new_deck.html", all_tags=all_tags)
 
 @app.route("/create_deck", methods = ["POST"])
 def create_deck():
@@ -70,9 +81,9 @@ def show_deck(deck_id):
     cards = decks.get_cards(deck_id)
     tags = decks.get_deck_tags(deck_id)
 
-    return render_template("show_deck.html", deck = deck, cards = cards, tags = tags)
+    return render_template("show_deck.html", deck=deck, cards=cards, tags=tags)
 
-@app.route("/edit_deck/<int:deck_id>", methods = ["GET", "POST"])
+@app.route("/edit_deck/<int:deck_id>", methods=["GET", "POST"])
 def edit_deck(deck_id):
     require_login()
 
@@ -127,7 +138,7 @@ def remove_deck(deck_id):
 
     return render_template("remove_deck.html", deck=deck)
 
-@app.route("/add_card", methods = ["POST"])
+@app.route("/add_card", methods=["POST"])
 def add_card():
     require_login()
     check_csrf()
@@ -158,7 +169,7 @@ def add_card():
 
     return redirect("/deck/" + str(deck_id))
 
-@app.route("/update_card", methods = ["POST"])
+@app.route("/update_card", methods=["POST"])
 def update_card():
     require_login()
     check_csrf()

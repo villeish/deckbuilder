@@ -34,7 +34,8 @@
 {% for deck in decks %}
 <div class="deck">
   <a href="/deck/{{ deck.id }}">{{ deck.name }}</a> <br />
-  Created by: {{ deck.username }} <br />
+  Created by:
+  <a href="/user/{{ deck.user_id }}">{{ deck.username }}</a> <br />
   {{ deck.description }}
 </div>
 {% endfor %}
