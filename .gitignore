@@ -2,5 +2,3 @@ __pycache__
 venv
 database.db
 test*.png
-init_db.py
-requirements.txt

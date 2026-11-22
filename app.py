@@ -244,17 +244,24 @@ def create():
     username = request.form["username"]
     password1 = request.form["password1"]
     password2 = request.form["password2"]
+
+    if not username or len(username) < 3 or len(username) > 20:
+        return redirect("/register")
+
+    if not password1 or len(password1) < 8:
+        return redirect("/register")
+
     if password1 != password2:
-        flash("Error: Passwords dont match")
+        flash("Passwords do not match.")
         return redirect("/register")
 
     try:
         users.create_user(username, password1)
     except sqlite3.IntegrityError:
-        flash("Error: User already exists")
+        flash("Username is already taken.")
         return redirect("/register")
 
-    flash("Account created succesfully!")
+    flash("Account created successfully!")
     return redirect("/")
 
 
@@ -262,20 +269,22 @@ def create():
 def login():
     if request.method == "GET":
         return render_template("login.html")
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        
-        user_id = users.check_login(username, password)
-        if user_id:
-            session["user_id"] = user_id
-            session["username"] = username
-            session["csrf_token"] = secrets.token_hex(16)
-            return redirect("/")
-        else:
-            flash("Error: Wrong username or password")
-            return redirect("/login")
+    username = request.form["username"]
+    password = request.form["password"]
 
+    if not username or not password:
+        return redirect("/login")
+
+    user_id = users.check_login(username, password)
+
+    if user_id:
+        session["user_id"] = user_id
+        session["username"] = username
+        session["csrf_token"] = secrets.token_hex(16)
+        return redirect("/")
+    else:
+        flash("Wrong username or password.")
+        return redirect("/login")
 
 @app.route("/logout")
 def logout():
