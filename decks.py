@@ -53,7 +53,7 @@ def add_card(deck_id, card_name, quantity):
     if result:
         card_id = result[0]["id"]
         new_quantity = result[0]["quantity"] + quantity
-        update_card_quantity(card_id, new_quantity)
+        update_card(card_id, new_quantity)
     else:
         sql = """INSERT INTO deck_cards (deck_id, card_name, quantity)
                  VALUES (?, ?, ?)"""
@@ -65,10 +65,11 @@ def update_deck(deck_id, name, description):
                           WHERE id = ?"""
     db.execute(sql, [name, description, deck_id])
 
-def update_card_quantity(card_id, quantity):
-    sql = """UPDATE deck_cards SET quantity = ?
+def update_card(card_id, card_name, quantity):
+    sql = """UPDATE deck_cards
+             SET card_name = ?, quantity = ?
              WHERE id = ?"""
-    db.execute(sql, [quantity, card_id])
+    db.execute(sql, [card_name, quantity, card_id])
 
 def remove_card(card_id):
     sql = "DELETE FROM deck_cards WHERE id = ?"

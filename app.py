@@ -58,11 +58,13 @@ def create_deck():
 
     name = request.form["name"]
     if not name or len(name) > 50:
-        abort(403)
+        flash("Deck name must be between 1-50 characters!")
+        return redirect("/new_deck")
 
     description = request.form["description"]
     if len(description) > 1000:
-        abort(403)
+        flash("Deck description too long!")
+        return redirect("/new_deck")
 
     user_id = session["user_id"]
 
@@ -103,12 +105,21 @@ def edit_deck(deck_id):
     name = request.form["name"]
     description = request.form["description"]
 
-    if name == "":
-        flash("You must give the deck a name.")
-        return redirect("/edit_deck/" + str(deck_id))
+    errors = []
 
-    if len(name) > 50 or len(description) > 1000:
-        abort(403)
+    if name == "":
+        errors.append("You must give the deck a name!")
+
+    if len(name) > 50:
+        errors.append("Deck name is too long!")
+
+    if len(description) > 1000:
+        errors.append("Deck description is too long!")
+
+    if errors:
+        for error in errors:
+            flash(error)
+        return redirect("/edit_deck/" + str(deck_id))
 
     decks.update_deck(deck_id, name, description)
 
@@ -138,54 +149,9 @@ def remove_deck(deck_id):
 
     return render_template("remove_deck.html", deck=deck)
 
-@app.route("/add_card", methods=["POST"])
-def add_card():
+@app.route("/edit_cards/<int:deck_id>")
+def edit_cards(deck_id):
     require_login()
-    check_csrf()
-
-    deck_id = request.form["deck_id"]
-    card_name = request.form["card_name"].strip()
-    quantity = request.form["quantity"]
-
-    if not deck_id.isdigit():
-        abort(403)
-
-    if not card_name or len(card_name) > 100:
-        abort(403)
-
-    if not quantity.isdigit() or int(quantity) < 1:
-        abort(403)
-
-    deck_id = int(deck_id)
-    deck = decks.get_deck(deck_id)
-
-    if not deck:
-        abort(404)
-
-    if deck["user_id"] != session["user_id"]:
-        abort(403)
-
-    decks.add_card(deck_id, card_name, int(quantity))
-
-    return redirect("/deck/" + str(deck_id))
-
-@app.route("/update_card", methods=["POST"])
-def update_card():
-    require_login()
-    check_csrf()
-
-    deck_id = request.form["deck_id"]
-    card_id = request.form["card_id"]
-    quantity = request.form["quantity"]
-
-    if not deck_id.isdigit() or not card_id.isdigit():
-        abort(403)
-
-    if not quantity.isdigit() or int(quantity) < 1:
-        abort(403)
-
-    deck_id = int(deck_id)
-    card_id = int(card_id)
 
     deck = decks.get_deck(deck_id)
 
@@ -197,12 +163,89 @@ def update_card():
 
     cards = decks.get_cards(deck_id)
 
+    return render_template("edit_cards.html", deck=deck, cards=cards)
+
+@app.route("/add_card", methods=["POST"])
+def add_card():
+    require_login()
+    check_csrf()
+
+    deck_id = request.form["deck_id"]
+    card_name = request.form["card_name"].strip()
+    quantity = request.form["quantity"]
+
+    errors = []
+
+    if not deck_id.isdigit():
+        abort(403)
+
+    if not card_name or len(card_name) > 100:
+        errors.append("Card name must be between 1 and 100 characters!")
+
+    if not quantity.isdigit() or int(quantity) < 1:
+        errors.append("Card quantity must be a positive number!")
+
+    deck_id = int(deck_id)
+    deck = decks.get_deck(deck_id)
+
+    if not deck:
+        abort(404)
+
+    if deck["user_id"] != session["user_id"]:
+        abort(403)
+
+    if errors:
+        for error in errors:
+            flash(error)
+        return redirect("/edit_cards/" + str(deck_id))
+
+    decks.add_card(deck_id, card_name, int(quantity))
+
+    return redirect("/edit_cards/" + str(deck_id))
+
+@app.route("/update_card", methods=["POST"])
+def update_card():
+    require_login()
+    check_csrf()
+
+    deck_id = request.form["deck_id"]
+    card_id = request.form["card_id"]
+    card_name = request.form["card_name"]
+    quantity = request.form["quantity"]
+
+    errors = []
+
+    if not deck_id.isdigit() or not card_id.isdigit():
+        abort(403)
+
+    if not card_name or len(card_name) > 100:
+        errors.append("Card name must be between 1 and 100 characters!")
+
+    if not quantity.isdigit() or int(quantity) < 1:
+        errors.append("Card quantity must be a positive number!")
+
+    if errors:
+        for error in errors:
+            flash(error)
+        return redirect("/edit_cards/" + str(deck_id))
+
+    deck_id = int(deck_id)
+    card_id = int(card_id)
+
+    deck = decks.get_deck(deck_id)
+    if not deck:
+        abort(404)
+
+    if deck["user_id"] != session["user_id"]:
+        abort(403)
+
+    cards = decks.get_cards(deck_id)
     if not any(card["id"] == card_id for card in cards):
         abort(404)
 
-    decks.update_card_quantity(card_id, int(quantity))
+    decks.update_card(card_id, card_name, int(quantity))
 
-    return redirect("/deck/" + str(deck_id))
+    return redirect("/edit_cards/" + str(deck_id))
 
 @app.route("/remove_card", methods=["POST"])
 def remove_card():
@@ -233,7 +276,7 @@ def remove_card():
 
     decks.remove_card(card_id)
 
-    return redirect("/deck/" + str(deck_id))
+    return redirect("/edit_cards/" + str(deck_id))
 
 @app.route("/register")
 def register():

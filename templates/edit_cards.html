@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block title %}Manage cards - {{ deck.name }}{% endblock %}
+
+{% block content %}
+<h2>Manage cards in {{ deck.name }}</h2>
+
+<p>
+  <a href="/deck/{{ deck.id }}">Back to deck</a>
+</p>
+
+<h3>Current cards</h3>
+<ul>
+  {% for card in cards %}
+  <li>
+    <form action="/update_card" method="post">
+      <p>
+        <label for="card_name_{{ card.id }}">Card name:</label>
+        <input type="text" name="card_name" id="card_name_{{ card.id }}"
+               value="{{ card.card_name }}" />
+      </p>
+
+      <p>
+        <label for="quantity_{{ card.id }}">Quantity:</label>
+        <input type="number" name="quantity" id="quantity_{{ card.id }}"
+               value="{{ card.quantity }}" />
+      </p>
+
+      <input type="hidden" name="card_id" value="{{ card.id }}" />
+      <input type="hidden" name="deck_id" value="{{ deck.id }}" />
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+
+      <input type="submit" value="Update card" />
+    </form>
+
+    <form action="/remove_card" method="post">
+      <input type="hidden" name="card_id" value="{{ card.id }}" />
+      <input type="hidden" name="deck_id" value="{{ deck.id }}" />
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+      <input type="submit" value="Remove card" />
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+
+<h3>Add a card</h3>
+
+<form action="/add_card" method="post">
+  <p>
+    <label for="card_name">Card name:</label> <br />
+    <input type="text" name="card_name" id="card_name" />
+  </p>
+
+  <p>
+    <label for="quantity">Quantity:</label> <br />
+    <input type="number" name="quantity" id="quantity" />
+  </p>
+
+  <input type="hidden" name="deck_id" value="{{ deck.id }}" />
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+
+  <input type="submit" value="Add card" />
+</form>
+{% endblock %}
