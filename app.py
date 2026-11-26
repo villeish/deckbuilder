@@ -5,6 +5,7 @@ import config
 import sqlite3
 import users
 import decks
+import comments as comments_db
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
@@ -97,8 +98,9 @@ def show_deck(deck_id):
 
     cards = decks.get_cards(deck_id)
     tags = decks.get_deck_tags(deck_id)
+    comments = comments_db.get_comments(deck_id)
 
-    return render_template("show_deck.html", deck=deck, cards=cards, tags=tags)
+    return render_template("show_deck.html", deck=deck, cards=cards, tags=tags, comments=comments)
 
 @app.route("/edit_deck/<int:deck_id>", methods=["GET", "POST"])
 def edit_deck(deck_id):
@@ -297,6 +299,74 @@ def remove_card():
     decks.remove_card(card_id)
 
     return redirect("/edit_cards/" + str(deck_id))
+
+@app.route("/add_comment", methods=["POST"])
+def add_comment():
+    require_login()
+    check_csrf()
+
+    deck_id = request.form["deck_id"]
+
+    if not deck_id.isdigit():
+        abort(403)
+
+    deck_id = int(deck_id)
+    deck = decks.get_deck(deck_id)
+
+    if not deck:
+        abort(404)
+
+    content = request.form["content"].strip()
+
+    errors = []
+
+    if not content:
+        errors.append("Comment cannot be empty!")
+
+    if len(content) > 1000:
+        errors.append("Comment cannot exceed 1000 characters!")
+
+    if errors:
+        for error in errors:
+            flash(error)
+
+        cards = decks.get_cards(deck_id)
+        tags = decks.get_deck_tags(deck_id)
+        all_comments = comments_db.get_comments(deck_id)
+        return render_template("show_deck.html", deck=deck, cards=cards, tags=tags, comments=all_comments, comment_content=content)
+
+    comments_db.add_comment(deck_id, session["user_id"], content)
+
+    return redirect("/deck/" + str(deck_id))
+
+@app.route("/remove_comment", methods=["POST"])
+def remove_comment():
+    require_login()
+    check_csrf()
+
+    comment_id = request.form["comment_id"]
+    deck_id = request.form["deck_id"]
+
+    if not comment_id.isdigit() or not deck_id.isdigit():
+        abort(403)
+
+    comment_id = int(comment_id)
+    deck_id = int(deck_id)
+
+    comment = comments_db.get_comment(comment_id)
+
+    if not comment:
+        abort(404)
+
+    if comment["deck_id"] != deck_id:
+        abort(404)
+
+    if comment["user_id"] != session["user_id"]:
+        abort(403)
+
+    comments_db.remove_comment(comment_id)
+
+    return redirect("/deck/" + str(deck_id))
 
 @app.route("/register")
 def register():

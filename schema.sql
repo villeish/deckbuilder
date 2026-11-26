@@ -34,7 +34,7 @@ CREATE TABLE comments (
     content TEXT,
     sent_at TEXT,
     user_id INTEGER REFERENCES users,
-    deck_id INTEGER REFERENCES decks
+    deck_id INTEGER REFERENCES decks(id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_deck_comments ON comments (deck_id);
