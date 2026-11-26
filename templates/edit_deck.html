@@ -16,6 +16,16 @@
     <textarea name="description" id="description"
               rows="8" cols="60">{{ description }}</textarea>
   </p>
+<h3>Tags</h3>
+  {% for tag in all_tags %}
+    <p>
+      <label>
+        <input type="checkbox" name="tags" value="{{ tag.id }}"
+              {% if tag.id in selected_tag_ids %}checked{% endif %} />
+        {{ tag.name }}
+      </label>
+    </p>
+  {% endfor %}
 
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
   <input type="submit" value="Save changes" />

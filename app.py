@@ -116,12 +116,16 @@ def edit_deck(deck_id):
         abort(403)
 
     if request.method == "GET":
-        return render_template("edit_deck.html", deck=deck, name=deck["name"], description=deck["description"])
+        all_tags = decks.get_tags()
+        deck_tags = decks.get_deck_tags(deck_id)
+        selected_tag_ids = [tag["id"] for tag in deck_tags]
+        return render_template("edit_deck.html", deck=deck, name=deck["name"], description=deck["description"], all_tags=all_tags, selected_tag_ids=selected_tag_ids)
 
     check_csrf()
 
     name = request.form["name"].strip()
     description = request.form["description"].strip()
+    tag_ids = request.form.getlist("tags")
 
     errors = []
 
@@ -134,12 +138,22 @@ def edit_deck(deck_id):
     if len(description) > 1000:
         errors.append("Deck description is too long!")
 
+    all_tags = decks.get_tags()
+    valid_tag_ids = [str(tag["id"]) for tag in all_tags]
+
+    if any(tag_id not in valid_tag_ids for tag_id in tag_ids):
+        errors.append("Invalid tag selection!")
+
     if errors:
         for error in errors:
             flash(error)
-        return render_template("edit_deck.html", deck=deck, name=name, description=description)
+        return render_template("edit_deck.html", deck=deck, name=name, description=description, all_tags=all_tags, selected_tag_ids=[int(tag_id) for tag_id in tag_ids if tag_id in valid_tag_ids])
 
     decks.update_deck(deck_id, name, description)
+    decks.remove_deck_tags(deck_id)
+
+    for tag_id in tag_ids:
+        decks.add_deck_tag(deck_id, int(tag_id))
 
     flash("Deck details updated.")
     return redirect("/deck/" + str(deck_id))
