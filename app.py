@@ -1,21 +1,24 @@
+"""Main application routes."""
+import math
+import secrets
+import sqlite3
 from flask import Flask
 from flask import redirect, render_template, request, session, flash, abort
-import secrets
 import config
-import sqlite3
-import math
 import users
 import decks
 import comments as comments_db
 
 app = Flask(__name__)
-app.secret_key = config.secret_key
+app.secret_key = config.SECRET_KEY
 
 def require_login():
+    """Ensure that the user is logged in."""
     if "user_id" not in session:
         abort(403)
 
 def check_csrf():
+    """Validate the submitted CSRF token."""
     if "csrf_token" not in request.form:
         abort(403)
     if request.form["csrf_token"] != session["csrf_token"]:
@@ -24,6 +27,7 @@ def check_csrf():
 @app.route("/")
 @app.route("/<int:page>")
 def index(page=1):
+    """Display a list of decks."""
     page_size = 10
     deck_count = decks.deck_count()
     page_count = math.ceil(deck_count / page_size)
@@ -37,10 +41,16 @@ def index(page=1):
     all_decks = decks.get_decks(page, page_size)
     all_tags = decks.get_tags()
 
-    return render_template("index.html", decks=all_decks, all_tags=all_tags, page=page, page_count=page_count)
+    return render_template("index.html",
+                           decks=all_decks,
+                           all_tags=all_tags,
+                           page=page,
+                           page_count=page_count
+                           )
 
 @app.route("/user/<int:user_id>")
 def show_user(user_id):
+    """Display a user's profile and decks."""
     user = users.get_user(user_id)
 
     if not user:
@@ -54,6 +64,7 @@ def show_user(user_id):
 @app.route("/search")
 @app.route("/search/<int:page>")
 def search(page=1):
+    """Search decks by name, description and tags."""
     page_size = 10
     query = request.args.get("query", "")
     tag_ids = request.args.getlist("tags")
@@ -62,24 +73,34 @@ def search(page=1):
     page_count = math.ceil(deck_count / page_size)
     page_count = max(page_count, 1)
 
-    if page < 1:
-        page = 1
-    if page > page_count:
-        page = page_count
+    page = max(page, 1)
+    page = min(page, page_count)
 
     results = decks.find_decks(query, tag_ids, page, page_size)
     all_tags = decks.get_tags()
 
-    return render_template("index.html", decks=results, all_tags=all_tags, page=page, page_count=page_count)
+    return render_template("index.html",
+                           decks=results,
+                           all_tags=all_tags,
+                           page=page,
+                           page_count=page_count
+                           )
 
 @app.route("/new_deck")
 def new_deck():
+    """Display the form for creating a deck."""
     require_login()
     all_tags = decks.get_tags()
-    return render_template("new_deck.html", all_tags=all_tags, name="", description="", selected_tags=[])
+    return render_template("new_deck.html",
+                           all_tags=all_tags,
+                           name="",
+                           description="",
+                           selected_tags=[]
+                           )
 
 @app.route("/create_deck", methods = ["POST"])
 def create_deck():
+    """Create a new deck."""
     require_login()
     check_csrf()
 
@@ -106,7 +127,12 @@ def create_deck():
     if errors:
         for error in errors:
             flash(error)
-        return render_template("new_deck.html", all_tags=all_tags, name=name, description=description, selected_tags=tag_ids)
+        return render_template("new_deck.html",
+                               all_tags=all_tags,
+                               name=name,
+                               description=description,
+                               selected_tags=tag_ids
+                               )
 
     user_id = session["user_id"]
     deck_id = decks.add_deck(name, description, user_id)
@@ -118,6 +144,7 @@ def create_deck():
 
 @app.route("/deck/<int:deck_id>")
 def show_deck(deck_id):
+    """Display a deck, its cards, tags and comments."""
     deck = decks.get_deck(deck_id)
     if not deck:
         abort(404)
@@ -130,6 +157,7 @@ def show_deck(deck_id):
 
 @app.route("/edit_deck/<int:deck_id>", methods=["GET", "POST"])
 def edit_deck(deck_id):
+    """Display the deck editing form."""
     require_login()
 
     deck = decks.get_deck(deck_id)
@@ -144,7 +172,13 @@ def edit_deck(deck_id):
         all_tags = decks.get_tags()
         deck_tags = decks.get_deck_tags(deck_id)
         selected_tag_ids = [tag["id"] for tag in deck_tags]
-        return render_template("edit_deck.html", deck=deck, name=deck["name"], description=deck["description"], all_tags=all_tags, selected_tag_ids=selected_tag_ids)
+        return render_template("edit_deck.html",
+                               deck=deck,
+                               name=deck["name"],
+                               description=deck["description"],
+                               all_tags=all_tags,
+                               selected_tag_ids=selected_tag_ids
+                               )
 
     check_csrf()
 
@@ -172,7 +206,17 @@ def edit_deck(deck_id):
     if errors:
         for error in errors:
             flash(error)
-        return render_template("edit_deck.html", deck=deck, name=name, description=description, all_tags=all_tags, selected_tag_ids=[int(tag_id) for tag_id in tag_ids if tag_id in valid_tag_ids])
+        return render_template("edit_deck.html",
+                               deck=deck,
+                               name=name,
+                               description=description,
+                               all_tags=all_tags,
+                               selected_tag_ids=[
+                                   int(tag_id)
+                                   for tag_id in tag_ids
+                                   if tag_id in valid_tag_ids
+                               ]
+                               )
 
     decks.update_deck(deck_id, name, description)
     decks.remove_deck_tags(deck_id)
@@ -185,6 +229,7 @@ def edit_deck(deck_id):
 
 @app.route("/remove_deck/<int:deck_id>", methods=["GET", "POST"])
 def remove_deck(deck_id):
+    """Display the deck removal page."""
     require_login()
 
     deck = decks.get_deck(deck_id)
@@ -201,13 +246,13 @@ def remove_deck(deck_id):
         if "remove" in request.form:
             decks.remove_deck(deck_id)
             return redirect("/")
-        else:
-            return redirect("/deck/" + str(deck_id))
+        return redirect("/deck/" + str(deck_id))
 
     return render_template("remove_deck.html", deck=deck)
 
 @app.route("/edit_cards/<int:deck_id>")
 def edit_cards(deck_id):
+    """Display the card management page."""
     require_login()
 
     deck = decks.get_deck(deck_id)
@@ -224,6 +269,7 @@ def edit_cards(deck_id):
 
 @app.route("/add_card", methods=["POST"])
 def add_card():
+    """Add a card to a deck."""
     require_login()
     check_csrf()
 
@@ -255,17 +301,28 @@ def add_card():
         for error in errors:
             flash(error)
         cards = decks.get_cards(deck_id)
-        return render_template("edit_cards.html", deck=deck, cards=cards, new_card_name=card_name, new_quantity=quantity)
+        return render_template("edit_cards.html",
+                               deck=deck,
+                               cards=cards,
+                               new_card_name=card_name,
+                               new_quantity=quantity
+                               )
 
     if not decks.add_card(deck_id, card_name, int(quantity)):
         flash("A deck cannot contain more than 99 copies of a card.")
         cards = decks.get_cards(deck_id)
-        return render_template("edit_cards.html", deck=deck, cards=cards, new_card_name=card_name, new_quantity=quantity)
+        return render_template("edit_cards.html",
+                               deck=deck,
+                               cards=cards,
+                               new_card_name=card_name,
+                               new_quantity=quantity
+                               )
 
     return redirect("/edit_cards/" + str(deck_id))
 
 @app.route("/update_card", methods=["POST"])
 def update_card():
+    """Update a card in a deck."""
     require_login()
     check_csrf()
 
@@ -303,7 +360,13 @@ def update_card():
     if errors:
         for error in errors:
             flash(error)
-        return render_template("edit_cards.html", deck=deck, cards=cards, edited_card_id=card_id, edited_card_name=card_name, edited_quantity=quantity)
+        return render_template("edit_cards.html",
+                               deck=deck,
+                               cards=cards,
+                               edited_card_id=card_id,
+                               edited_card_name=card_name,
+                               edited_quantity=quantity
+                               )
 
     decks.update_card(card_id, card_name, int(quantity))
 
@@ -311,6 +374,7 @@ def update_card():
 
 @app.route("/remove_card", methods=["POST"])
 def remove_card():
+    """Remove a card from a deck."""
     require_login()
     check_csrf()
 
@@ -342,6 +406,7 @@ def remove_card():
 
 @app.route("/add_comment", methods=["POST"])
 def add_comment():
+    """Add a comment to a deck."""
     require_login()
     check_csrf()
 
@@ -373,7 +438,13 @@ def add_comment():
         cards = decks.get_cards(deck_id)
         tags = decks.get_deck_tags(deck_id)
         all_comments = comments_db.get_comments(deck_id)
-        return render_template("show_deck.html", deck=deck, cards=cards, tags=tags, comments=all_comments, comment_content=content)
+        return render_template("show_deck.html",
+                               deck=deck,
+                               cards=cards,
+                               tags=tags,
+                               comments=all_comments,
+                               comment_content=content
+                               )
 
     comments_db.add_comment(deck_id, session["user_id"], content)
 
@@ -381,6 +452,7 @@ def add_comment():
 
 @app.route("/remove_comment", methods=["POST"])
 def remove_comment():
+    """Remove a comment from a deck."""
     require_login()
     check_csrf()
 
@@ -410,12 +482,14 @@ def remove_comment():
 
 @app.route("/register")
 def register():
+    """Display the user registration form."""
     if "csrf_token" not in session:
         session["csrf_token"] = secrets.token_hex(16)
     return render_template("register.html")
 
 @app.route("/create", methods=["POST"])
 def create():
+    """Create a user account."""
     check_csrf()
     username = request.form["username"].strip()
     password1 = request.form["password1"].strip()
@@ -449,6 +523,7 @@ def create():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    """Display the login form."""
     if request.method == "GET":
         return render_template("login.html")
     username = request.form["username"].strip()
@@ -480,6 +555,7 @@ def login():
 
 @app.route("/logout", methods=["POST"])
 def logout():
+    """Log out the current user."""
     require_login()
     check_csrf()
 

@@ -3,3 +3,4 @@ venv
 database.db
 test*.png
 seed.py
+pylint_report.txt
