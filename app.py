@@ -318,11 +318,21 @@ def create():
 def login():
     if request.method == "GET":
         return render_template("login.html")
-    username = request.form["username"]
-    password = request.form["password"]
+    username = request.form["username"].strip()
+    password = request.form["password"].strip()
 
-    if not username or not password:
-        return redirect("/login")
+    errors = []
+
+    if not username:
+        errors.append("Username cannot be empty.")
+
+    if not password:
+        errors.append("Password cannot be empty.")
+
+    if errors:
+        for error in errors:
+            flash(error)
+        return render_template("login.html", username=username)
 
     user_id = users.check_login(username, password)
 
@@ -331,9 +341,9 @@ def login():
         session["username"] = username
         session["csrf_token"] = secrets.token_hex(16)
         return redirect("/")
-    else:
-        flash("Wrong username or password.")
-        return redirect("/login")
+
+    flash("Wrong username or password.")
+    return render_template("login.html", username=username)
 
 @app.route("/logout")
 def logout():
