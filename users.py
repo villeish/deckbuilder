@@ -6,6 +6,15 @@ def get_user(user_id):
     result = db.query(sql, [user_id])
     return result[0] if result else None
 
+def get_user_stats(user_id):
+    sql = """SELECT
+                 (SELECT COUNT(*) FROM decks
+                  WHERE user_id = ?) AS deck_count,
+                 (SELECT COUNT(*) FROM comments
+                  WHERE user_id = ?) AS comment_count"""
+    result = db.query(sql, [user_id, user_id])
+    return result[0]
+
 def get_decks(user_id):
     sql = "SELECT id, name FROM decks WHERE user_id = ? ORDER BY id DESC"
     return db.query(sql, [user_id])

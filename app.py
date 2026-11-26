@@ -34,8 +34,9 @@ def show_user(user_id):
         abort(404)
 
     all_decks = users.get_decks(user_id)
+    stats = users.get_user_stats(user_id)
 
-    return render_template("show_user.html", user=user, decks=all_decks)
+    return render_template("show_user.html", user=user, decks=all_decks, stats=stats)
 
 @app.route("/search")
 def search():
