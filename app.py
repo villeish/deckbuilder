@@ -385,10 +385,13 @@ def remove_comment():
 
 @app.route("/register")
 def register():
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_hex(16)
     return render_template("register.html")
 
 @app.route("/create", methods=["POST"])
 def create():
+    check_csrf()
     username = request.form["username"].strip()
     password1 = request.form["password1"].strip()
     password2 = request.form["password2"].strip()
@@ -450,10 +453,10 @@ def login():
     flash("Wrong username or password.")
     return render_template("login.html", username=username)
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])
 def logout():
-    if "user_id" in session:
-        del session["user_id"]
-        del session["username"]
-        del session["csrf_token"]
+    require_login()
+    check_csrf()
+
+    session.clear()
     return redirect("/")

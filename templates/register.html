@@ -18,6 +18,7 @@
     <label for="password2">Repeat password:</label> <br />
     <input type="password" name="password2" id="password2" autocomplete="new-password" />
   </p>
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
   <input type="submit" value="Register" />
 </form>
 {% endblock %}
