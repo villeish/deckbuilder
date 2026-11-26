@@ -47,17 +47,23 @@ def remove_deck(deck_id):
 
 def add_card(deck_id, card_name, quantity):
     sql = """SELECT id, quantity FROM deck_cards
-             WHERE deck_id = ? AND card_name = ?"""
+             WHERE deck_id = ? AND LOWER(card_name) = LOWER(?)"""
     result = db.query(sql, [deck_id, card_name])
 
     if result:
         card_id = result[0]["id"]
         new_quantity = result[0]["quantity"] + quantity
-        update_card(card_id, new_quantity)
+
+        if new_quantity > 99:
+            return False
+        
+        update_card_quantity(card_id, new_quantity)
+        return True
     else:
         sql = """INSERT INTO deck_cards (deck_id, card_name, quantity)
                  VALUES (?, ?, ?)"""
         db.execute(sql, [deck_id, card_name, quantity])
+        return True
 
 def update_deck(deck_id, name, description):
     sql = """UPDATE decks SET name = ?,
@@ -70,6 +76,11 @@ def update_card(card_id, card_name, quantity):
              SET card_name = ?, quantity = ?
              WHERE id = ?"""
     db.execute(sql, [card_name, quantity, card_id])
+
+def update_card_quantity(card_id, quantity):
+    sql = """UPDATE deck_cards SET quantity = ?
+             WHERE id = ?"""
+    db.execute(sql, [quantity, card_id])
 
 def remove_card(card_id):
     sql = "DELETE FROM deck_cards WHERE id = ?"

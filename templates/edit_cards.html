@@ -16,14 +16,14 @@
     <form action="/update_card" method="post">
       <p>
         <label for="card_name_{{ card.id }}">Card name:</label>
-        <input type="text" name="card_name" id="card_name_{{ card.id }}"
-               value="{{ card.card_name }}" />
+        <input type="text" name="card_name" id="card_name"
+               value="{{ edited_card_name if edited_card_id == card.id else card.card_name }}" />
       </p>
 
       <p>
         <label for="quantity_{{ card.id }}">Quantity:</label>
-        <input type="number" name="quantity" id="quantity_{{ card.id }}"
-               value="{{ card.quantity }}" />
+        <input type="number" name="quantity" id="quantity"
+               value="{{ edited_quantity if edited_card_id == card.id else card.quantity }}" />
       </p>
 
       <input type="hidden" name="card_id" value="{{ card.id }}" />
@@ -48,12 +48,12 @@
 <form action="/add_card" method="post">
   <p>
     <label for="card_name">Card name:</label> <br />
-    <input type="text" name="card_name" id="card_name" />
+    <input type="text" name="card_name" id="card_name" value="{{ new_card_name }}" />
   </p>
 
   <p>
     <label for="quantity">Quantity:</label> <br />
-    <input type="number" name="quantity" id="quantity" />
+    <input type="number" name="quantity" id="quantity" value="{{ new_quantity }}" />
   </p>
 
   <input type="hidden" name="deck_id" value="{{ deck.id }}" />

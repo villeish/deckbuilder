@@ -113,12 +113,12 @@ def edit_deck(deck_id):
         abort(403)
 
     if request.method == "GET":
-        return render_template("edit_deck.html", deck = deck)
+        return render_template("edit_deck.html", deck=deck, name=deck["name"], description=deck["description"])
 
     check_csrf()
 
-    name = request.form["name"]
-    description = request.form["description"]
+    name = request.form["name"].strip()
+    description = request.form["description"].strip()
 
     errors = []
 
@@ -134,7 +134,7 @@ def edit_deck(deck_id):
     if errors:
         for error in errors:
             flash(error)
-        return redirect("/edit_deck/" + str(deck_id))
+        return render_template("edit_deck.html", deck=deck, name=name, description=description)
 
     decks.update_deck(deck_id, name, description)
 
@@ -197,8 +197,8 @@ def add_card():
     if not card_name or len(card_name) > 100:
         errors.append("Card name must be between 1 and 100 characters!")
 
-    if not quantity.isdigit() or int(quantity) < 1:
-        errors.append("Card quantity must be a positive number!")
+    if not quantity.isdigit() or int(quantity) < 1 or int(quantity) > 99:
+        errors.append("Card quantity must be between 1 and 99!")
 
     deck_id = int(deck_id)
     deck = decks.get_deck(deck_id)
@@ -212,9 +212,13 @@ def add_card():
     if errors:
         for error in errors:
             flash(error)
-        return redirect("/edit_cards/" + str(deck_id))
+        cards = decks.get_cards(deck_id)
+        return render_template("edit_cards.html", deck=deck, cards=cards, new_card_name=card_name, new_quantity=quantity)
 
-    decks.add_card(deck_id, card_name, int(quantity))
+    if not decks.add_card(deck_id, card_name, int(quantity)):
+        flash("A deck cannot contain more than 99 copies of a card.")
+        cards = decks.get_cards(deck_id)
+        return render_template("edit_cards.html", deck=deck, cards=cards, new_card_name=card_name, new_quantity=quantity)
 
     return redirect("/edit_cards/" + str(deck_id))
 
@@ -225,24 +229,9 @@ def update_card():
 
     deck_id = request.form["deck_id"]
     card_id = request.form["card_id"]
-    card_name = request.form["card_name"]
-    quantity = request.form["quantity"]
-
-    errors = []
 
     if not deck_id.isdigit() or not card_id.isdigit():
         abort(403)
-
-    if not card_name or len(card_name) > 100:
-        errors.append("Card name must be between 1 and 100 characters!")
-
-    if not quantity.isdigit() or int(quantity) < 1:
-        errors.append("Card quantity must be a positive number!")
-
-    if errors:
-        for error in errors:
-            flash(error)
-        return redirect("/edit_cards/" + str(deck_id))
 
     deck_id = int(deck_id)
     card_id = int(card_id)
@@ -257,6 +246,22 @@ def update_card():
     cards = decks.get_cards(deck_id)
     if not any(card["id"] == card_id for card in cards):
         abort(404)
+
+    card_name = request.form["card_name"]
+    quantity = request.form["quantity"]
+
+    errors = []
+
+    if not card_name or len(card_name) > 100:
+        errors.append("Card name must be between 1 and 100 characters!")
+
+    if not quantity.isdigit() or int(quantity) < 1 or int(quantity) > 99:
+        errors.append("Card quantity must be between 1 and 99!")
+
+    if errors:
+        for error in errors:
+            flash(error)
+        return render_template("edit_cards.html", deck=deck, cards=cards, edited_card_id=card_id, edited_card_name=card_name, edited_quantity=quantity)
 
     decks.update_card(card_id, card_name, int(quantity))
 
