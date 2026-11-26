@@ -8,21 +8,15 @@
 <form action="/create" method="post">
   <p>
     <label for="username">Username:</label> <br />
-    <input type="text" name="username" id="username"
-           minlength="3" maxlength="20" required
-           autocomplete="username" />
+    <input type="text" name="username" id="username" autocomplete="username" value="{{ username }}" />
   </p>
   <p>
     <label for="password1">Password:</label> <br />
-    <input type="password" name="password1" id="password1"
-           minlength="8" required
-           autocomplete="new-password" />
+    <input type="password" name="password1" id="password1" autocomplete="new-password" />
   </p>
   <p>
     <label for="password2">Repeat password:</label> <br />
-    <input type="password" name="password2" id="password2"
-           minlength="8" required
-           autocomplete="new-password" />
+    <input type="password" name="password2" id="password2" autocomplete="new-password" />
   </p>
   <input type="submit" value="Register" />
 </form>

@@ -284,25 +284,31 @@ def register():
 
 @app.route("/create", methods=["POST"])
 def create():
-    username = request.form["username"]
-    password1 = request.form["password1"]
-    password2 = request.form["password2"]
+    username = request.form["username"].strip()
+    password1 = request.form["password1"].strip()
+    password2 = request.form["password2"].strip()
+
+    errors = []
 
     if not username or len(username) < 3 or len(username) > 20:
-        return redirect("/register")
+        errors.append("Username must be between 3 and 20 characters!")
 
     if not password1 or len(password1) < 8:
-        return redirect("/register")
+        errors.append("Password must be at least 8 characters long!")
 
     if password1 != password2:
-        flash("Passwords do not match.")
-        return redirect("/register")
+        errors.append("Passwords do not match!")
+
+    if errors:
+        for error in errors:
+            flash(error)
+        return render_template("register.html", username=username)
 
     try:
         users.create_user(username, password1)
     except sqlite3.IntegrityError:
         flash("Username is already taken.")
-        return redirect("/register")
+        return render_template("register.html", username=username)
 
     flash("Account created successfully!")
     return redirect("/")
