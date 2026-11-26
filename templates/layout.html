@@ -11,7 +11,8 @@
 
   {% if session.user_id %}
   <p>
-    You're logged in as {{ session.username }}
+    You're logged in as 
+    <a href="/user/{{ session.user_id }}">{{ session.username }}</a>
   </p>
   {% endif %}
 

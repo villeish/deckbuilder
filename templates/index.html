@@ -40,4 +40,45 @@
 </div>
 {% endfor %}
 
+{% if page_count > 1 %}
+    <div class="pagination">
+        {% if request.endpoint == "search" %}
+            {% set base_url = "/search" %}
+            {% set query_string = request.query_string.decode() %}
+        {% else %}
+            {% set base_url = "" %}
+            {% set query_string = "" %}
+        {% endif %}
+
+        {% if page > 1 %}
+            <a href="{{ base_url }}/{{ page - 1 }}{% if query_string %}?{{ query_string }}{% endif %}">Previous</a>
+        {% endif %}
+
+        {% if page > 3 %}
+            <a href="{{ base_url }}/1{% if query_string %}?{{ query_string }}{% endif %}">1</a>
+            ...
+        {% endif %}
+
+        {% set start_page = [page - 2, 1] | max %}
+        {% set end_page = [page + 2, page_count] | min %}
+
+        {% for number in range(start_page, end_page + 1) %}
+            {% if number == page %}
+                <strong>{{ number }}</strong>
+            {% else %}
+                <a href="{{ base_url }}/{{ number }}{% if query_string %}?{{ query_string }}{% endif %}">{{ number }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page < page_count - 2 %}
+            ...
+            <a href="{{ base_url }}/{{ page_count }}{% if query_string %}?{{ query_string }}{% endif %}">{{ page_count }}</a>
+        {% endif %}
+
+        {% if page < page_count %}
+            <a href="{{ base_url }}/{{ page + 1 }}{% if query_string %}?{{ query_string }}{% endif %}">Next</a>
+        {% endif %}
+    </div>
+{% endif %}
+
 {% endblock %}

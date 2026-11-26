@@ -3,6 +3,7 @@ from flask import redirect, render_template, request, session, flash, abort
 import secrets
 import config
 import sqlite3
+import math
 import users
 import decks
 import comments as comments_db
@@ -21,10 +22,22 @@ def check_csrf():
         abort(403)
 
 @app.route("/")
-def index():
-    all_decks = decks.get_decks()
+@app.route("/<int:page>")
+def index(page=1):
+    page_size = 10
+    deck_count = decks.deck_count()
+    page_count = math.ceil(deck_count / page_size)
+    page_count = max(page_count, 1)
+
+    if page < 1:
+        return redirect("/1")
+    if page > page_count:
+        return redirect("/" + str(page_count))
+
+    all_decks = decks.get_decks(page, page_size)
     all_tags = decks.get_tags()
-    return render_template("index.html", decks=all_decks, all_tags=all_tags)
+
+    return render_template("index.html", decks=all_decks, all_tags=all_tags, page=page, page_count=page_count)
 
 @app.route("/user/<int:user_id>")
 def show_user(user_id):
@@ -39,13 +52,25 @@ def show_user(user_id):
     return render_template("show_user.html", user=user, decks=all_decks, stats=stats)
 
 @app.route("/search")
-def search():
+@app.route("/search/<int:page>")
+def search(page=1):
+    page_size = 10
     query = request.args.get("query", "")
-
     tag_ids = request.args.getlist("tags")
-    results = decks.find_decks(query, tag_ids)
+
+    deck_count = decks.find_deck_count(query, tag_ids)
+    page_count = math.ceil(deck_count / page_size)
+    page_count = max(page_count, 1)
+
+    if page < 1:
+        page = 1
+    if page > page_count:
+        page = page_count
+
+    results = decks.find_decks(query, tag_ids, page, page_size)
     all_tags = decks.get_tags()
-    return render_template("index.html", decks=results, all_tags=all_tags)
+
+    return render_template("index.html", decks=results, all_tags=all_tags, page=page, page_count=page_count)
 
 @app.route("/new_deck")
 def new_deck():

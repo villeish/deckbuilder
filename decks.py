@@ -10,15 +10,18 @@ def add_deck(name, description, user_id):
 
     return deck_id
 
-def get_decks():
+def get_decks(page, page_size):
     sql = """SELECT decks.id,
                     decks.name,
                     decks.description,
                     users.id user_id,
                     users.username
              FROM decks JOIN users ON decks.user_id = users.id
-             ORDER BY decks.id DESC"""
-    return db.query(sql)
+             ORDER BY decks.id DESC
+             LIMIT ? OFFSET ?"""
+    limit = page_size
+    offset = page_size * (page - 1)
+    return db.query(sql, [limit, offset])
 
 def get_deck(deck_id):
     sql = """SELECT decks.id,
@@ -31,6 +34,10 @@ def get_deck(deck_id):
                    decks.id = ?"""
     result = db.query(sql, [deck_id])
     return result[0] if result else None
+
+def deck_count():
+    sql = "SELECT COUNT(*) FROM decks"
+    return db.query(sql)[0][0]
 
 def get_cards(deck_id):
     sql = """SELECT id, card_name, quantity
@@ -86,7 +93,7 @@ def remove_card(card_id):
     sql = "DELETE FROM deck_cards WHERE id = ?"
     db.execute(sql, [card_id])
 
-def find_decks(query, tag_ids):
+def find_decks(query, tag_ids, page, page_size):
     sql = """SELECT decks.id,
                     decks.name,
                     decks.description,
@@ -114,9 +121,39 @@ def find_decks(query, tag_ids):
     if conditions:
         sql += " WHERE " + " AND ".join(conditions)
 
-    sql += " ORDER BY decks.id DESC"
+    sql += " ORDER BY decks.id DESC LIMIT ? OFFSET ?"
+
+    limit = page_size
+    offset = page_size * (page - 1)
+    params.extend([limit, offset])
 
     return db.query(sql, params)
+
+def find_deck_count(query, tag_ids):
+    sql = "SELECT COUNT(*) FROM decks"
+
+    conditions = []
+    params = []
+
+    if query:
+        conditions.append("(name LIKE ? OR description LIKE ?)")
+        like = "%" + query + "%"
+        params.extend([like, like])
+
+    if tag_ids:
+        placeholders = ",".join("?" for tag_id in tag_ids)
+        conditions.append("""EXISTS (
+                                 SELECT 1 FROM deck_tags
+                                 WHERE deck_tags.deck_id = decks.id
+                                 AND deck_tags.tag_id IN (""" + placeholders + """)
+                             )""")
+        params.extend(tag_ids)
+
+    if conditions:
+        sql += " WHERE " + " AND ".join(conditions)
+
+    result = db.query(sql, params)
+    return result[0][0]
 
 def add_deck_tag(deck_id, tag_id):
     sql = """INSERT INTO deck_tags (deck_id, tag_id)
