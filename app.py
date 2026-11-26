@@ -49,29 +49,44 @@ def search():
 def new_deck():
     require_login()
     all_tags = decks.get_tags()
-    return render_template("new_deck.html", all_tags=all_tags)
+    return render_template("new_deck.html", all_tags=all_tags, name="", description="", selected_tags=[])
 
 @app.route("/create_deck", methods = ["POST"])
 def create_deck():
     require_login()
     check_csrf()
 
-    name = request.form["name"]
-    if not name or len(name) > 50:
-        flash("Deck name must be between 1-50 characters!")
-        return redirect("/new_deck")
+    name = request.form["name"].strip()
+    description = request.form["description"].strip()
+    tag_ids = request.form.getlist("tags")
 
-    description = request.form["description"]
+    all_tags = decks.get_tags()
+    valid_tag_ids = [str(tag["id"]) for tag in all_tags]
+
+    errors = []
+
+    if not name or len(name) > 50:
+        errors.append("Deck name must be between 1-50 characters!")
+
     if len(description) > 1000:
-        flash("Deck description too long!")
-        return redirect("/new_deck")
+        errors.append("Deck description is too long!")
+
+    for tag_id in tag_ids:
+        if tag_id not in valid_tag_ids:
+            errors.append("Invalid tag selection!")
+            break
+
+    if errors:
+        for error in errors:
+            flash(error)
+        return render_template("new_deck.html", all_tags=all_tags, name=name, description=description, selected_tags=tag_ids)
 
     user_id = session["user_id"]
-
     deck_id = decks.add_deck(name, description, user_id)
-    tag_ids = request.form.getlist("tags")
+
     for tag_id in tag_ids:
         decks.add_deck_tag(deck_id, int(tag_id))
+
     return redirect("/deck/" + str(deck_id))
 
 @app.route("/deck/<int:deck_id>")

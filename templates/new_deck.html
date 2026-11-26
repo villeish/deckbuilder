@@ -9,20 +9,21 @@
 <form action="/create_deck" method="post">
   <p>
     <label for="name">Deck name:</label> <br />
-    <input type="text" name="name" id="name" maxlength="50" required />
+    <input type="text" name="name" id="name" value="{{ name }}" />
   </p>
 
   <p>
     <label for="description">Description:</label> <br />
     <textarea name="description" id="description"
-              rows="8" cols="60" maxlength="1000"></textarea>
+              rows="8" cols="60">{{ description }}</textarea>
   </p>
 
   <p>
     <strong>Tags:</strong><br />
     {% for tag in all_tags %}
       <input type="checkbox" name="tags" value="{{ tag.id }}"
-            id="tag{{ tag.id }}" />
+             id="tag{{ tag.id }}"
+             {% if tag.id|string in selected_tags %}checked{% endif %}  />
       <label for="tag{{ tag.id }}">{{ tag.name }}</label><br />
     {% endfor %}
   </p>
